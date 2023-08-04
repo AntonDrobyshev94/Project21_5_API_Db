@@ -15,6 +15,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace Project21API_Db.Controllers
 {
@@ -23,15 +24,18 @@ namespace Project21API_Db.Controllers
     public class ValuesController : ControllerBase
     {
         private readonly ContactData repositoryData;
+
         public IConfiguration Configuration { get; }
 
-        public ValuesController(ContactData repositoryData, 
-            IConfiguration configuration)
+        public ValuesController(ContactData repositoryData)
         {
             this.repositoryData = repositoryData;
-            Configuration = configuration;
         }
 
+        /// <summary>
+        /// GET метод, возвращающий информацию о контактах
+        /// </summary>
+        /// <returns></returns>
         // GET api/values
         [HttpGet]
         public IEnumerable<IContact> Get()
@@ -39,6 +43,12 @@ namespace Project21API_Db.Controllers
             return repositoryData.GetContacts();
         }
 
+        /// <summary>
+        /// Get Асинхронный метод, предоставляющий информацию о
+        /// выбранном контакте
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         // GET api/values/5
         [HttpGet]
         [Route("Details/{id}")]
@@ -47,6 +57,12 @@ namespace Project21API_Db.Controllers
             return await repositoryData.GetContactByID(id);
         }
 
+        /// <summary>
+        /// Get метод с атрибутом авторизации по роли администратора,
+        /// Асинхронный метод, который возвращает текущие роли
+        /// пользователя
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Authorize]
         [Route("CurrentRoles")]
@@ -63,6 +79,33 @@ namespace Project21API_Db.Controllers
             return null;
         }
 
+        /// <summary>
+        /// Get метод, возвращающий bool переменную с ответом
+        /// о валидности токена. Метод служит для проверки
+        /// токена на валидность.
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Authorize]
+        [Route("CheckToken")]
+        public async Task<bool> CheckTokenMethod()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get запрос с атрибутом авторизации по роли администратора,
+        /// Асинхронный метод, возвращающий список всех пользователей
+        /// пользователей
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Authorize]
         [Route("GetUsers")]
@@ -74,6 +117,12 @@ namespace Project21API_Db.Controllers
             return Ok(json);
         }
 
+        /// <summary>
+        /// Get запрос с атрибутом авторизации по роли администратора,
+        /// Асинхронный метод, возвращающий список всех
+        /// пользователей с ролью администратора
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("GetAdmins")]
         [Authorize(Policy = "AdminOnly")]
@@ -84,6 +133,11 @@ namespace Project21API_Db.Controllers
             return Ok(json);
         }
 
+        /// <summary>
+        /// POST запрос с атрибутом авторизации.
+        /// Метод добавления нового контакта в базу данных
+        /// </summary>
+        /// <param name="value"></param>
         // POST api/values
         [HttpPost]
         [Authorize]
@@ -92,6 +146,11 @@ namespace Project21API_Db.Controllers
             repositoryData.AddContacts(value);
         }
 
+        /// <summary>
+        /// POST запрос с атрибутом авторизации с ролью администратора
+        /// Метод удаления контакта из базы данных
+        /// </summary>
+        /// <param name="id"></param>
         // DELETE api/values/5
         [HttpDelete("{id}")]
         [Authorize(Policy = "AdminOnly")]
@@ -100,6 +159,12 @@ namespace Project21API_Db.Controllers
             repositoryData.DeleteContact(id);
         }
 
+        /// <summary>
+        /// POST запрос с атрибутом авторизации с ролью администратора
+        /// Метод для изменения контакта по указанному ID
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="contact"></param>
         [HttpPost]
         [Route("ChangeContactById/{id}")]
         [Authorize(Policy = "AdminOnly")]
@@ -108,6 +173,12 @@ namespace Project21API_Db.Controllers
             repositoryData.ChangeContact(id, contact);
         }
 
+        /// <summary>
+        /// POST запрос с атрибутом авторизации с ролью администратора
+        /// Метод создания новой роли
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("RoleCreate")]
         [Authorize(Policy = "AdminOnly")]
@@ -116,6 +187,12 @@ namespace Project21API_Db.Controllers
             return await repositoryData.CreateRole(model);
         }
 
+        /// <summary>
+        /// POST запрос с атрибутом авторизации с ролью администратора
+        /// Метод добавления роли указанному пользователю
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("AddRoleToUser")]
         [Authorize(Policy = "AdminOnly")]
@@ -124,6 +201,12 @@ namespace Project21API_Db.Controllers
             return await repositoryData.AddRoleToUser(model);
         }
 
+        /// <summary>
+        /// POST запрос с атрибутом авторизации с ролью администратора
+        /// Метод удаления роли у указанного пользователя
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("RemoveUserRole")]
         [Authorize(Policy = "AdminOnly")]
@@ -132,6 +215,12 @@ namespace Project21API_Db.Controllers
             return await repositoryData.RemoveUserRole(model);
         }
 
+        /// <summary>
+        /// POST запрос с атрибутом авторизации с ролью администратора
+        /// Метод удаления указанного пользователя
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("RemoveUser")]
         [Authorize(Policy = "AdminOnly")]
@@ -140,6 +229,12 @@ namespace Project21API_Db.Controllers
             return await repositoryData.RemoveUser(model);
         }
 
+        /// <summary>
+        /// POST запрос для регистрации нового пользователя по
+        /// указанным в модели данным.
+        /// </summary>
+        /// <param name="regData"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Registration")]
         public async Task<IActionResult> Registration([FromBody] UserRegistration regData)
@@ -152,19 +247,12 @@ namespace Project21API_Db.Controllers
             return Ok(loginResponse);
         }
 
-        [HttpPost]
-        [Route("AdminRegistration")]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> AdministrationRegistration([FromBody] UserRegistration regData)
-        {
-            TokenResponseModel loginResponse = await repositoryData.AdminRegister(regData);
-            if (loginResponse == null)
-            {
-                return Unauthorized();
-            }
-            return Ok(loginResponse);
-        }
-
+        /// <summary>
+        /// POST запрос на аутентификацию пользователя по указанным
+        /// аутентификационным данным
+        /// </summary>
+        /// <param name="loginData"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] UserLoginProp loginData)

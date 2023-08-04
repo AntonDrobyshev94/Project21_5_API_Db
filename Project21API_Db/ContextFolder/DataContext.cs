@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Project21API_Db.AuthContactApp;
 using Project21API_Db.Models;
-using System.Collections.Generic;
 
 namespace Project21API_Db.ContextFolder
 {
@@ -14,7 +13,7 @@ namespace Project21API_Db.ContextFolder
         {
             optionsBuilder.UseSqlServer(
                 @"Server=(localdb)\MSSQLLocalDB;
-                  DataBase=Project21APIDBTest39;
+                  DataBase=Project21API_DB;
                   Trusted_Connection=True;");
         }
         protected override void OnModelCreating(ModelBuilder builder)
@@ -34,7 +33,7 @@ namespace Project21API_Db.ContextFolder
             string password = "12345Qq!";
             var passwordHasher = new PasswordHasher<User>();
             string hashedPassword = passwordHasher.HashPassword(null, password);
-            string passwordUser = "12345Qq!!";
+            string passwordUser = "12345Qq!";
             var passwordHasherUser = new PasswordHasher<User>();
             string hashedPasswordUser = passwordHasherUser.HashPassword(null, passwordUser);
 

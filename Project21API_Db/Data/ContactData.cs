@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Project21API_Db.Controllers;
 
 namespace Project21API_Db.Data
 {
@@ -581,6 +580,22 @@ namespace Project21API_Db.Data
             }
         }
 
+        /// <summary>
+        /// Метод генерации JWT токена, принимающий строковые переменные
+        /// имени пользователя и Id роли и возвращающий строковое значение
+        /// токена. При условии, что Id роли равен 1 (т.е. это id 
+        /// администратора) создаётся новая коллекция List класса Claim,
+        /// в которую записываются даннные о имени пользователя и роли.
+        /// Далее создается Jwt токен с конфигурационными параметрами,
+        /// указанными в appsettings.json и хэш кодом 256. Время действия 
+        /// токена задаётся равным 10 минутам. По окончанию происходит
+        /// возвращение JWT токена в виде строки с помощью ключевого слова
+        /// return. Если id роли не равен 1, то создается токен обычного
+        /// пользователя.
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="roleId"></param>
+        /// <returns></returns>
         private string GenerateJwtToken(string userName, string roleId)
         {
             if (roleId == "1")
@@ -621,8 +636,27 @@ namespace Project21API_Db.Data
             }
         }
 
+        /// <summary>
+        /// Асинхронный метод регистрации нового пользователя, принимающий
+        /// модель UserRegistration, описанную отдельным классом и 
+        /// возвращающий TokenResponseModel, описанный отдельным классом.
+        /// В методе происходит создание экземпляра нового пользователя с
+        /// именем из принимаемой модели. С помощью метода CreateAsync 
+        /// происходит создание пароля для пользовательского аккаунта   
+        /// экземпляра User который проходит процедуру хэш кодирования. 
+        /// Результат метода содержится в переменной createResult. Далее,
+        /// с помощью метода AddToRoleAsync происходит добавление роли 
+        /// User для вновь созданного пользовательского аккаунта. Результат
+        /// выполнения метода сохраняется в переменной addRoleResult.
+        /// С помощью метода GenerateJwtToken происходит создание нового 
+        /// токена для пользовательского аккаунта. Далее происходит
+        /// сохранение результатов, а именно токена и имени пользователя
+        /// в модель TokenResponseModel, результат который возвращается
+        /// с помощью ключевого слова return, при условии, что createResult 
+        /// и addRoleResult возвращают значение Succeeded. В обратном 
+        /// случае возвращается null.
         /// </summary>
-        /// <param name="loginData"></param>
+        /// <param name="registrData"></param>
         /// <returns></returns>
         public async Task<TokenResponseModel> Register(UserRegistration registrData)
         {
@@ -637,28 +671,6 @@ namespace Project21API_Db.Data
                 username = user.UserName
             };
 
-            if (createResult.Succeeded && addRoleResult.Succeeded)
-            {
-                return response;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public async Task<TokenResponseModel> AdminRegister(UserRegistration registrData)
-        {
-            var user = new User { UserName = registrData.LoginProp };
-            var createResult = await _userManager.CreateAsync(user, registrData.Password);
-            var addRoleResult = await _userManager.AddToRoleAsync(user, "User");
-            var jwt = GenerateJwtToken(user.UserName, "2");
-
-            var response = new TokenResponseModel
-            {
-                access_token = jwt,
-                username = user.UserName
-            };
             if (createResult.Succeeded && addRoleResult.Succeeded)
             {
                 return response;
